@@ -46,8 +46,8 @@ class AddDocumentViewModel(
         _uiState.update { state -> state.copy(note = value) }
     }
 
-    fun onImageUriInputChange(value: String) {
-        _uiState.update { state -> state.copy(imageUriInput = value) }
+    fun onImagePicked(uri: String?) {
+        _uiState.update { state -> state.copy(imageUri = uri) }
     }
 
     fun onSaveClick() {
@@ -69,7 +69,7 @@ class AddDocumentViewModel(
                         category = currentState.category,
                         expirationTimestampMillis = currentState.expirationTimestampMillis,
                         note = currentState.note.trim(),
-                        imageUri = currentState.imageUriInput.trim().ifBlank { null },
+                        imageUri = currentState.imageUri,
                     ),
                 )
                 _events.emit(AddDocumentEvent.Saved)

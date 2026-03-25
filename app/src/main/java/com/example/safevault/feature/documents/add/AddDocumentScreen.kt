@@ -4,12 +4,15 @@ import android.app.Activity
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,10 +20,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.Button
@@ -40,16 +45,18 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.safevault.R
 import com.example.safevault.domain.model.DocumentCategory
 import com.example.safevault.ui.theme.SafeVaultTheme
@@ -68,11 +75,25 @@ fun AddDocumentScreen(
     onCategoryChange: (DocumentCategory) -> Unit,
     onExpirationDateChange: (Long?) -> Unit,
     onNoteChange: (String) -> Unit,
-    onImageUriInputChange: (String) -> Unit,
+    onImagePicked: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val expirationLabel = rememberExpirationLabel(uiState.expirationTimestampMillis)
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+            onImagePicked(uri.toString())
+        }
+    }
 
     Box(
         modifier = modifier
@@ -90,9 +111,7 @@ fun AddDocumentScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = {
-                        Text(text = stringResource(id = R.string.document_add_title))
-                    },
+                    title = { Text(text = stringResource(id = R.string.document_add_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(
@@ -271,14 +290,43 @@ fun AddDocumentScreen(
                             maxLines = 6,
                         )
 
-                        OutlinedTextField(
-                            value = uiState.imageUriInput,
-                            onValueChange = onImageUriInputChange,
-                            label = { Text(text = stringResource(id = R.string.document_add_label_image_uri)) },
-                            placeholder = { Text(text = stringResource(id = R.string.document_add_placeholder_image_uri)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
+                        Text(
+                            text = stringResource(id = R.string.document_add_label_image),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            OutlinedButton(onClick = { pickImageLauncher.launch(arrayOf("image/*")) }) {
+                                Icon(
+                                    imageVector = Icons.Outlined.PhotoLibrary,
+                                    contentDescription = null,
+                                )
+                                Text(
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    text = stringResource(id = R.string.document_add_pick_image),
+                                )
+                            }
+                            TextButton(onClick = { onImagePicked(null) }) {
+                                Text(text = stringResource(id = R.string.document_add_remove_image))
+                            }
+                        }
+
+                        if (uiState.imageUri != null) {
+                            AsyncImage(
+                                model = uiState.imageUri,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .size(180.dp)
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Text(
+                                text = stringResource(id = R.string.document_add_no_image),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
             }
@@ -331,17 +379,17 @@ private fun HeroCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CategorySelector(
     selected: DocumentCategory,
     onCategoryChange: (DocumentCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         DocumentCategory.entries.forEach { category ->
             FilterChip(
@@ -357,12 +405,15 @@ private fun CategorySelector(
 private fun rememberExpirationLabel(
     expirationTimestampMillis: Long?,
 ): String {
-    if (expirationTimestampMillis == null) {
-        return stringResource(id = R.string.document_add_expiration_value_none)
+    val noneLabel = stringResource(id = R.string.document_add_expiration_none)
+    return remember(expirationTimestampMillis, noneLabel) {
+        if (expirationTimestampMillis == null) {
+            noneLabel
+        } else {
+            val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
+            formatter.format(Date(expirationTimestampMillis))
+        }
     }
-
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
-    return formatter.format(Date(expirationTimestampMillis))
 }
 
 private fun showNativeDatePicker(
@@ -418,7 +469,7 @@ private fun AddDocumentPreview() {
             onCategoryChange = {},
             onExpirationDateChange = {},
             onNoteChange = {},
-            onImageUriInputChange = {},
+            onImagePicked = {},
         )
     }
 }

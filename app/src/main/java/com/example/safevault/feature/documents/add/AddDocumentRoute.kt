@@ -36,6 +36,6 @@ fun AddDocumentRoute(
         onCategoryChange = viewModel::onCategoryChange,
         onExpirationDateChange = viewModel::onExpirationDateChange,
         onNoteChange = viewModel::onNoteChange,
-        onImageUriInputChange = viewModel::onImageUriInputChange,
+        onImagePicked = viewModel::onImagePicked,
     )
 }

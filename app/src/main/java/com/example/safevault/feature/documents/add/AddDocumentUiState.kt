@@ -7,7 +7,7 @@ data class AddDocumentUiState(
     val category: DocumentCategory = DocumentCategory.IDENTITY,
     val expirationTimestampMillis: Long? = null,
     val note: String = "",
-    val imageUriInput: String = "",
+    val imageUri: String? = null,
     val isSaving: Boolean = false,
     val titleError: Boolean = false,
 )
