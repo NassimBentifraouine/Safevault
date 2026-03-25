@@ -1,4 +1,4 @@
-package com.example.safevault.feature.documents.detail
+package com.example.safevault.feature.documents.edit
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -8,15 +8,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.safevault.data.repository.DocumentsRepository
 
 @Composable
-fun DocumentDetailRoute(
+fun EditDocumentRoute(
     documentId: Long,
     documentsRepository: DocumentsRepository,
     onBackClick: () -> Unit,
-    onDocumentDeleted: () -> Unit,
-    onEditClick: () -> Unit,
+    onDocumentUpdated: () -> Unit,
 ) {
-    val viewModel: DocumentDetailViewModel = viewModel(
-        factory = DocumentDetailViewModel.provideFactory(
+    val viewModel: EditDocumentViewModel = viewModel(
+        factory = EditDocumentViewModel.provideFactory(
             documentId = documentId,
             documentsRepository = documentsRepository,
         ),
@@ -25,16 +24,20 @@ fun DocumentDetailRoute(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (event is DocumentDetailEvent.Deleted) {
-                onDocumentDeleted()
+            if (event is EditDocumentEvent.Updated) {
+                onDocumentUpdated()
             }
         }
     }
 
-    DocumentDetailScreen(
+    EditDocumentScreen(
         uiState = uiState,
         onBackClick = onBackClick,
-        onDeleteConfirm = viewModel::onDeleteConfirm,
-        onEditClick = onEditClick,
+        onSaveClick = viewModel::onSaveClick,
+        onTitleChange = viewModel::onTitleChange,
+        onCategoryChange = viewModel::onCategoryChange,
+        onExpirationDateChange = viewModel::onExpirationDateChange,
+        onNoteChange = viewModel::onNoteChange,
+        onImagePicked = viewModel::onImagePicked,
     )
 }

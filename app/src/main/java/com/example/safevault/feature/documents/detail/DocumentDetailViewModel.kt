@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,7 +27,7 @@ class DocumentDetailViewModel(
     val events: SharedFlow<DocumentDetailEvent> = _events.asSharedFlow()
 
     init {
-        refreshDocument()
+        observeDocument()
     }
 
     fun onDeleteConfirm() {
@@ -45,17 +47,19 @@ class DocumentDetailViewModel(
         }
     }
 
-    private fun refreshDocument() {
+    private fun observeDocument() {
         viewModelScope.launch {
-            val document = runCatching {
-                documentsRepository.getDocumentById(documentId)
-            }.getOrNull()
-            _uiState.update { state ->
-                state.copy(
-                    isLoading = false,
-                    document = document,
-                )
-            }
+            documentsRepository.documents
+                .map { documents -> documents.firstOrNull { document -> document.id == documentId } }
+                .catch { emit(null) }
+                .collect { document ->
+                    _uiState.update { state ->
+                        state.copy(
+                            isLoading = false,
+                            document = document,
+                        )
+                    }
+                }
         }
     }
 

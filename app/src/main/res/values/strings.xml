@@ -35,7 +35,13 @@
     <string name="document_add_no_image">Aucune image selectionnee</string>
     <string name="document_add_date_confirm">Valider</string>
     <string name="document_add_date_cancel">Annuler</string>
+    <string name="document_edit_title">Modifier le document</string>
+    <string name="document_edit_subtitle">Mettez a jour vos informations pour garder un coffre toujours fiable.</string>
+    <string name="document_edit_save">Enregistrer les modifications</string>
+    <string name="document_edit_not_found_title">Document introuvable</string>
+    <string name="document_edit_not_found_body">Impossible de modifier ce document car il n\'est plus disponible.</string>
     <string name="document_detail_title">Detail du document</string>
+    <string name="document_detail_edit">Modifier le document</string>
     <string name="document_detail_not_found_title">Document introuvable</string>
     <string name="document_detail_not_found_body">Ce document n\'existe plus ou a deja ete supprime.</string>
     <string name="document_detail_back">Retour</string>

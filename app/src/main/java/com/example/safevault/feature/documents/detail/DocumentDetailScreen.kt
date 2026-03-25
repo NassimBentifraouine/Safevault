@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -59,6 +60,7 @@ fun DocumentDetailScreen(
     uiState: DocumentDetailUiState,
     onBackClick: () -> Unit,
     onDeleteConfirm: () -> Unit,
+    onEditClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showDeleteDialog by rememberSaveable { mutableStateOf(false) }
@@ -114,6 +116,17 @@ fun DocumentDetailScreen(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                                 contentDescription = null,
+                            )
+                        }
+                    },
+                    actions = {
+                        IconButton(
+                            enabled = uiState.document != null && !uiState.isDeleting,
+                            onClick = onEditClick,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = stringResource(id = R.string.document_detail_edit),
                             )
                         }
                     },
@@ -406,6 +419,7 @@ private fun DocumentDetailPreview() {
             ),
             onBackClick = {},
             onDeleteConfirm = {},
+            onEditClick = {},
         )
     }
 }
