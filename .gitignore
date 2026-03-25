@@ -3,6 +3,7 @@
 /.gradle-local/
 /.gradle-local-room/
 /.android-local/
+/.kotlin/
 /local.properties
 /.idea/caches
 /.idea/libraries
