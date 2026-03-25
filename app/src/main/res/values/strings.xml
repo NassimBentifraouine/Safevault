@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">SafeVault</string>
+    <string name="documents_screen_title">SafeVault</string>
+    <string name="documents_add_short">Ajouter</string>
+    <string name="documents_overview_title">Coffre personnel</string>
+    <string name="documents_overview_description">Vos documents sensibles, centralises dans une interface claire et soignee.</string>
+    <string name="documents_count">%1$d document(s)</string>
+    <string name="documents_empty_title">Votre coffre est vide</string>
+    <string name="documents_empty_description">Ajoutez d\'abord vos documents essentiels (identite, sante, assurance, finance) pour demarrer.</string>
+    <string name="documents_empty_action">Ajouter le premier document</string>
+    <string name="documents_expiration_no_date">Pas de date d\'expiration</string>
+    <string name="documents_expiration_label">Echeance: %1$s</string>
+    <string name="documents_badge_no_date">Sans date</string>
+    <string name="documents_badge_expired">Expire</string>
+    <string name="documents_badge_today">Expire aujourd\'hui</string>
+    <string name="documents_badge_warning">Expire dans %1$d j</string>
+    <string name="documents_badge_valid">Valide</string>
+</resources>
