@@ -37,6 +37,8 @@ class DocumentDetailViewModel(
             try {
                 documentsRepository.deleteDocumentById(currentDocument.id)
                 _events.emit(DocumentDetailEvent.Deleted)
+            } catch (_: Throwable) {
+                _events.emit(DocumentDetailEvent.DeleteFailed)
             } finally {
                 _uiState.update { state -> state.copy(isDeleting = false) }
             }
@@ -45,7 +47,9 @@ class DocumentDetailViewModel(
 
     private fun refreshDocument() {
         viewModelScope.launch {
-            val document = documentsRepository.getDocumentById(documentId)
+            val document = runCatching {
+                documentsRepository.getDocumentById(documentId)
+            }.getOrNull()
             _uiState.update { state ->
                 state.copy(
                     isLoading = false,
@@ -72,4 +76,5 @@ class DocumentDetailViewModel(
 
 sealed interface DocumentDetailEvent {
     data object Deleted : DocumentDetailEvent
+    data object DeleteFailed : DocumentDetailEvent
 }

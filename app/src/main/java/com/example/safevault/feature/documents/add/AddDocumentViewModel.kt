@@ -73,6 +73,8 @@ class AddDocumentViewModel(
                     ),
                 )
                 _events.emit(AddDocumentEvent.Saved)
+            } catch (_: Throwable) {
+                _events.emit(AddDocumentEvent.SaveFailed)
             } finally {
                 _uiState.update { state -> state.copy(isSaving = false) }
             }
@@ -92,4 +94,5 @@ class AddDocumentViewModel(
 
 sealed interface AddDocumentEvent {
     data object Saved : AddDocumentEvent
+    data object SaveFailed : AddDocumentEvent
 }

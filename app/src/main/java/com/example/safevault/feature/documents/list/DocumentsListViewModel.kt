@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.safevault.data.repository.DocumentsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -15,6 +16,7 @@ class DocumentsListViewModel(
     documentsRepository: DocumentsRepository,
 ) : ViewModel() {
     val uiState: StateFlow<DocumentsListUiState> = documentsRepository.documents
+        .catch { emit(emptyList()) }
         .map { documents ->
             DocumentsListUiState(documents = documents)
         }
