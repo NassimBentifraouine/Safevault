@@ -13,6 +13,7 @@ fun EditDocumentRoute(
     documentsRepository: DocumentsRepository,
     onBackClick: () -> Unit,
     onDocumentUpdated: () -> Unit,
+    onUpdateFailed: () -> Unit,
 ) {
     val viewModel: EditDocumentViewModel = viewModel(
         factory = EditDocumentViewModel.provideFactory(
@@ -24,8 +25,9 @@ fun EditDocumentRoute(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (event is EditDocumentEvent.Updated) {
-                onDocumentUpdated()
+            when (event) {
+                is EditDocumentEvent.Updated -> onDocumentUpdated()
+                is EditDocumentEvent.UpdateFailed -> onUpdateFailed()
             }
         }
     }

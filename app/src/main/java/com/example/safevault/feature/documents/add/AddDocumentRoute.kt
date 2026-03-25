@@ -12,6 +12,7 @@ fun AddDocumentRoute(
     documentsRepository: DocumentsRepository,
     onBackClick: () -> Unit,
     onDocumentSaved: () -> Unit,
+    onSaveFailed: () -> Unit,
 ) {
     val viewModel: AddDocumentViewModel = viewModel(
         factory = AddDocumentViewModel.provideFactory(
@@ -22,8 +23,9 @@ fun AddDocumentRoute(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (event is AddDocumentEvent.Saved) {
-                onDocumentSaved()
+            when (event) {
+                is AddDocumentEvent.Saved -> onDocumentSaved()
+                is AddDocumentEvent.SaveFailed -> onSaveFailed()
             }
         }
     }

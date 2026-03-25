@@ -57,4 +57,10 @@
     <string name="document_detail_delete_confirm_body">Cette action est irreversible.</string>
     <string name="document_detail_delete_confirm_action">Supprimer</string>
     <string name="document_detail_delete_cancel">Annuler</string>
+    <string name="snackbar_document_saved">Document ajoute avec succes.</string>
+    <string name="snackbar_document_save_failed">Impossible d\'enregistrer le document.</string>
+    <string name="snackbar_document_updated">Document mis a jour avec succes.</string>
+    <string name="snackbar_document_update_failed">Impossible de mettre a jour le document.</string>
+    <string name="snackbar_document_deleted">Document supprime.</string>
+    <string name="snackbar_document_delete_failed">Impossible de supprimer le document.</string>
 </resources>

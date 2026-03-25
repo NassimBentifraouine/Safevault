@@ -13,6 +13,7 @@ fun DocumentDetailRoute(
     documentsRepository: DocumentsRepository,
     onBackClick: () -> Unit,
     onDocumentDeleted: () -> Unit,
+    onDeleteFailed: () -> Unit,
     onEditClick: () -> Unit,
 ) {
     val viewModel: DocumentDetailViewModel = viewModel(
@@ -25,8 +26,9 @@ fun DocumentDetailRoute(
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
-            if (event is DocumentDetailEvent.Deleted) {
-                onDocumentDeleted()
+            when (event) {
+                is DocumentDetailEvent.Deleted -> onDocumentDeleted()
+                is DocumentDetailEvent.DeleteFailed -> onDeleteFailed()
             }
         }
     }
