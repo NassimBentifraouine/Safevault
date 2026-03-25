@@ -24,8 +24,6 @@ fun DocumentsListRoute(
         onAddDocumentClick = onAddDocumentClick,
         onDocumentClick = onDocumentClick,
         onCategoryFilterChange = viewModel::onCategoryFilterChange,
-        onExpirationFilterChange = viewModel::onExpirationFilterChange,
-        onSortOptionChange = viewModel::onSortOptionChange,
         onResetFiltersClick = viewModel::onResetFiltersClick,
     )
 }

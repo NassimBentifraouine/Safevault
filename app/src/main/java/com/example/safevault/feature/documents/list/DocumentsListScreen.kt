@@ -65,8 +65,6 @@ fun DocumentsListScreen(
     onAddDocumentClick: () -> Unit,
     onDocumentClick: (Long) -> Unit,
     onCategoryFilterChange: (DocumentCategory?) -> Unit,
-    onExpirationFilterChange: (DocumentsExpirationFilter) -> Unit,
-    onSortOptionChange: (DocumentsSortOption) -> Unit,
     onResetFiltersClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -132,11 +130,9 @@ fun DocumentsListScreen(
                 item {
                     DisplayControlsCard(
                         selectedCategory = uiState.selectedCategory,
-                        selectedExpirationFilter = uiState.selectedExpirationFilter,
-                        selectedSortOption = uiState.selectedSortOption,
+                        hasActiveFilters = uiState.hasActiveFilters,
                         onCategoryFilterChange = onCategoryFilterChange,
-                        onExpirationFilterChange = onExpirationFilterChange,
-                        onSortOptionChange = onSortOptionChange,
+                        onResetFiltersClick = onResetFiltersClick,
                     )
                 }
 
@@ -251,11 +247,9 @@ private fun VaultOverviewCard(
 @Composable
 private fun DisplayControlsCard(
     selectedCategory: DocumentCategory?,
-    selectedExpirationFilter: DocumentsExpirationFilter,
-    selectedSortOption: DocumentsSortOption,
+    hasActiveFilters: Boolean,
     onCategoryFilterChange: (DocumentCategory?) -> Unit,
-    onExpirationFilterChange: (DocumentsExpirationFilter) -> Unit,
-    onSortOptionChange: (DocumentsSortOption) -> Unit,
+    onResetFiltersClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -318,70 +312,12 @@ private fun DisplayControlsCard(
                 }
             }
 
-            Text(
-                text = stringResource(id = R.string.documents_filter_expiration_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                DocumentsExpirationFilter.entries.forEach { filter ->
-                    FilterChip(
-                        selected = selectedExpirationFilter == filter,
-                        onClick = { onExpirationFilterChange(filter) },
-                        label = {
-                            Text(
-                                text = expirationFilterLabel(filter = filter),
-                            )
-                        },
-                    )
-                }
-            }
-
-            Text(
-                text = stringResource(id = R.string.documents_sort_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                DocumentsSortOption.entries.forEach { sortOption ->
-                    FilterChip(
-                        selected = selectedSortOption == sortOption,
-                        onClick = { onSortOptionChange(sortOption) },
-                        label = {
-                            Text(text = sortOptionLabel(sortOption = sortOption))
-                        },
-                    )
+            if (hasActiveFilters) {
+                OutlinedButton(onClick = onResetFiltersClick) {
+                    Text(text = stringResource(id = R.string.documents_filtered_empty_action))
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun expirationFilterLabel(filter: DocumentsExpirationFilter): String {
-    return when (filter) {
-        DocumentsExpirationFilter.ALL -> stringResource(id = R.string.documents_filter_all_expiration)
-        DocumentsExpirationFilter.EXPIRING_SOON -> stringResource(id = R.string.documents_filter_expiring_soon)
-        DocumentsExpirationFilter.EXPIRED -> stringResource(id = R.string.documents_filter_expired)
-        DocumentsExpirationFilter.NO_DATE -> stringResource(id = R.string.documents_filter_no_date)
-    }
-}
-
-@Composable
-private fun sortOptionLabel(sortOption: DocumentsSortOption): String {
-    return when (sortOption) {
-        DocumentsSortOption.EXPIRATION_ASC -> stringResource(id = R.string.documents_sort_expiration_asc)
-        DocumentsSortOption.TITLE_ASC -> stringResource(id = R.string.documents_sort_title_asc)
     }
 }
 
@@ -667,8 +603,6 @@ private fun DocumentsListEmptyPreview() {
             onAddDocumentClick = {},
             onDocumentClick = {},
             onCategoryFilterChange = {},
-            onExpirationFilterChange = {},
-            onSortOptionChange = {},
             onResetFiltersClick = {},
         )
     }
@@ -706,8 +640,6 @@ private fun DocumentsListFilledPreview() {
             onAddDocumentClick = {},
             onDocumentClick = {},
             onCategoryFilterChange = {},
-            onExpirationFilterChange = {},
-            onSortOptionChange = {},
             onResetFiltersClick = {},
         )
     }

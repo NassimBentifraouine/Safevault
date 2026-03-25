@@ -8,15 +8,7 @@
     <string name="documents_count_filtered">%1$d sur %2$d document(s)</string>
     <string name="documents_controls_title">Affichage intelligent</string>
     <string name="documents_filter_category_label">Filtrer par categorie</string>
-    <string name="documents_filter_expiration_label">Filtrer par echeance</string>
-    <string name="documents_sort_label">Trier par</string>
     <string name="documents_filter_all_categories">Toutes</string>
-    <string name="documents_filter_all_expiration">Toutes les echeances</string>
-    <string name="documents_filter_expiring_soon">Expire sous 30 jours</string>
-    <string name="documents_filter_expired">Deja expires</string>
-    <string name="documents_filter_no_date">Sans date</string>
-    <string name="documents_sort_expiration_asc">Echeance la plus proche</string>
-    <string name="documents_sort_title_asc">Titre A-Z</string>
     <string name="documents_empty_title">Votre coffre est vide</string>
     <string name="documents_empty_description">Ajoutez d\'abord vos documents essentiels (identite, sante, assurance, finance) pour demarrer.</string>
     <string name="documents_empty_action">Ajouter le premier document</string>
