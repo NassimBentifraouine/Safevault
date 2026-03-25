@@ -1,6 +1,9 @@
 package com.example.safevault.feature.documents.add
 
+import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,7 +39,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -364,16 +366,17 @@ private fun rememberExpirationLabel(
 }
 
 private fun showNativeDatePicker(
-    context: android.content.Context,
+    context: Context,
     initialDateMillis: Long,
     onDateSelected: (Long) -> Unit,
 ) {
+    val activity = context.findActivity() ?: return
     val calendar = Calendar.getInstance().apply {
         timeInMillis = initialDateMillis
     }
 
     DatePickerDialog(
-        context,
+        activity,
         { _, year, month, dayOfMonth ->
             val selected = Calendar.getInstance().apply {
                 set(Calendar.YEAR, year)
@@ -390,6 +393,14 @@ private fun showNativeDatePicker(
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH),
     ).show()
+}
+
+private fun Context.findActivity(): Activity? {
+    return when (this) {
+        is Activity -> this
+        is ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
 }
 
 @Preview(showBackground = true)

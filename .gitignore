@@ -2,6 +2,7 @@
 .gradle
 /.gradle-local/
 /.gradle-local-room/
+/.android-local/
 /local.properties
 /.idea/caches
 /.idea/libraries
