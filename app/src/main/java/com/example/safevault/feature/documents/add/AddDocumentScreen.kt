@@ -1,5 +1,6 @@
 package com.example.safevault.feature.documents.add
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,8 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -40,13 +39,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,6 +52,7 @@ import com.example.safevault.R
 import com.example.safevault.domain.model.DocumentCategory
 import com.example.safevault.ui.theme.SafeVaultTheme
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -71,37 +69,8 @@ fun AddDocumentScreen(
     onImageUriInputChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var showDatePicker by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
     val expirationLabel = rememberExpirationLabel(uiState.expirationTimestampMillis)
-
-    if (showDatePicker) {
-        val pickerState = rememberDatePickerState(
-            initialSelectedDateMillis = uiState.expirationTimestampMillis ?: System.currentTimeMillis(),
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onExpirationDateChange(pickerState.selectedDateMillis)
-                        showDatePicker = false
-                    },
-                ) {
-                    Text(text = stringResource(id = R.string.document_add_date_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDatePicker = false },
-                ) {
-                    Text(text = stringResource(id = R.string.document_add_date_cancel))
-                }
-            },
-        ) {
-            DatePicker(state = pickerState, showModeToggle = false)
-        }
-    }
 
     Box(
         modifier = modifier
@@ -248,7 +217,16 @@ fun AddDocumentScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedButton(onClick = { showDatePicker = true }) {
+                            OutlinedButton(
+                                onClick = {
+                                    showNativeDatePicker(
+                                        context = context,
+                                        initialDateMillis = uiState.expirationTimestampMillis
+                                            ?: System.currentTimeMillis(),
+                                        onDateSelected = onExpirationDateChange,
+                                    )
+                                },
+                            ) {
                                 Icon(
                                     imageVector = Icons.Outlined.CalendarMonth,
                                     contentDescription = null,
@@ -383,6 +361,35 @@ private fun rememberExpirationLabel(
 
     val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
     return formatter.format(Date(expirationTimestampMillis))
+}
+
+private fun showNativeDatePicker(
+    context: android.content.Context,
+    initialDateMillis: Long,
+    onDateSelected: (Long) -> Unit,
+) {
+    val calendar = Calendar.getInstance().apply {
+        timeInMillis = initialDateMillis
+    }
+
+    DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            val selected = Calendar.getInstance().apply {
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month)
+                set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            onDateSelected(selected.timeInMillis)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH),
+    ).show()
 }
 
 @Preview(showBackground = true)
