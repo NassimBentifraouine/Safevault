@@ -10,6 +10,7 @@ import com.example.safevault.data.repository.DocumentsRepository
 fun DocumentsListRoute(
     documentsRepository: DocumentsRepository,
     onAddDocumentClick: () -> Unit,
+    onDocumentClick: (Long) -> Unit,
 ) {
     val viewModel: DocumentsListViewModel = viewModel(
         factory = DocumentsListViewModel.provideFactory(
@@ -21,5 +22,6 @@ fun DocumentsListRoute(
     DocumentsListScreen(
         uiState = uiState,
         onAddDocumentClick = onAddDocumentClick,
+        onDocumentClick = onDocumentClick,
     )
 }

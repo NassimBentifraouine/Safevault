@@ -1,6 +1,7 @@
 package com.example.safevault.feature.documents.list
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +56,7 @@ private const val WARNING_THRESHOLD_DAYS = 30L
 fun DocumentsListScreen(
     uiState: DocumentsListUiState,
     onAddDocumentClick: () -> Unit,
+    onDocumentClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -119,7 +121,10 @@ fun DocumentsListScreen(
                     }
                 } else {
                     items(items = uiState.documents, key = { document -> document.id }) { document ->
-                        DocumentCard(document = document)
+                        DocumentCard(
+                            document = document,
+                            onClick = { onDocumentClick(document.id) },
+                        )
                     }
                 }
             }
@@ -256,12 +261,15 @@ private fun EmptyDocumentsCard(
 @Composable
 private fun DocumentCard(
     document: VaultDocument,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val expirationInfo = rememberExpirationInfo(expirationTimestampMillis = document.expirationTimestampMillis)
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
@@ -407,6 +415,7 @@ private fun DocumentsListEmptyPreview() {
         DocumentsListScreen(
             uiState = DocumentsListUiState(),
             onAddDocumentClick = {},
+            onDocumentClick = {},
         )
     }
 }
@@ -438,6 +447,7 @@ private fun DocumentsListFilledPreview() {
         DocumentsListScreen(
             uiState = DocumentsListUiState(documents = sampleDocuments),
             onAddDocumentClick = {},
+            onDocumentClick = {},
         )
     }
 }

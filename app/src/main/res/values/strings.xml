@@ -33,4 +33,20 @@
     <string name="document_add_placeholder_image_uri">content://... ou file://...</string>
     <string name="document_add_date_confirm">Valider</string>
     <string name="document_add_date_cancel">Annuler</string>
+    <string name="document_detail_title">Detail du document</string>
+    <string name="document_detail_not_found_title">Document introuvable</string>
+    <string name="document_detail_not_found_body">Ce document n\'existe plus ou a deja ete supprime.</string>
+    <string name="document_detail_back">Retour</string>
+    <string name="document_detail_category_label">Categorie</string>
+    <string name="document_detail_expiration_label">Echeance</string>
+    <string name="document_detail_expiration_none">Aucune date d\'expiration</string>
+    <string name="document_detail_note_label">Note</string>
+    <string name="document_detail_note_none">Aucune note</string>
+    <string name="document_detail_image_label">Image</string>
+    <string name="document_detail_image_none">Aucune image associee</string>
+    <string name="document_detail_delete">Supprimer le document</string>
+    <string name="document_detail_delete_confirm_title">Confirmer la suppression</string>
+    <string name="document_detail_delete_confirm_body">Cette action est irreversible.</string>
+    <string name="document_detail_delete_confirm_action">Supprimer</string>
+    <string name="document_detail_delete_cancel">Annuler</string>
 </resources>

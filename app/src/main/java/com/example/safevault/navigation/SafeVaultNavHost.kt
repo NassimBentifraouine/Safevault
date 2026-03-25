@@ -2,11 +2,14 @@ package com.example.safevault.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavType
 import androidx.navigation.NavHostController
+import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.safevault.di.AppContainer
 import com.example.safevault.feature.documents.add.AddDocumentRoute
+import com.example.safevault.feature.documents.detail.DocumentDetailRoute
 import com.example.safevault.feature.documents.list.DocumentsListRoute
 
 @Composable
@@ -26,6 +29,11 @@ fun SafeVaultNavHost(
                 onAddDocumentClick = {
                     navController.navigate(SafeVaultDestination.ADD_DOCUMENT_ROUTE)
                 },
+                onDocumentClick = { documentId ->
+                    navController.navigate(
+                        SafeVaultDestination.detailRoute(documentId = documentId),
+                    )
+                },
             )
         }
 
@@ -34,6 +42,21 @@ fun SafeVaultNavHost(
                 documentsRepository = appContainer.documentsRepository,
                 onBackClick = { navController.popBackStack() },
                 onDocumentSaved = { navController.popBackStack() },
+            )
+        }
+
+        composable(
+            route = SafeVaultDestination.DOCUMENT_DETAIL_ROUTE,
+            arguments = listOf(
+                navArgument("documentId") { type = NavType.LongType },
+            ),
+        ) { backStackEntry ->
+            val documentId = backStackEntry.arguments?.getLong("documentId") ?: 0L
+            DocumentDetailRoute(
+                documentId = documentId,
+                documentsRepository = appContainer.documentsRepository,
+                onBackClick = { navController.popBackStack() },
+                onDocumentDeleted = { navController.popBackStack() },
             )
         }
     }
