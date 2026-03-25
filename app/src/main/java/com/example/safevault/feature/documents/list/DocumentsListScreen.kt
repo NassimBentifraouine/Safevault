@@ -2,6 +2,7 @@ package com.example.safevault.feature.documents.list
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,17 +14,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,9 +40,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -59,6 +64,10 @@ fun DocumentsListScreen(
     uiState: DocumentsListUiState,
     onAddDocumentClick: () -> Unit,
     onDocumentClick: (Long) -> Unit,
+    onCategoryFilterChange: (DocumentCategory?) -> Unit,
+    onExpirationFilterChange: (DocumentsExpirationFilter) -> Unit,
+    onSortOptionChange: (DocumentsSortOption) -> Unit,
+    onResetFiltersClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -114,19 +123,45 @@ fun DocumentsListScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    VaultOverviewCard(totalDocuments = uiState.documents.size)
+                    VaultOverviewCard(
+                        totalDocuments = uiState.totalDocuments,
+                        visibleDocuments = uiState.documents.size,
+                    )
                 }
 
-                if (uiState.documents.isEmpty()) {
-                    item {
-                        EmptyDocumentsCard(onAddDocumentClick = onAddDocumentClick)
+                item {
+                    DisplayControlsCard(
+                        selectedCategory = uiState.selectedCategory,
+                        selectedExpirationFilter = uiState.selectedExpirationFilter,
+                        selectedSortOption = uiState.selectedSortOption,
+                        onCategoryFilterChange = onCategoryFilterChange,
+                        onExpirationFilterChange = onExpirationFilterChange,
+                        onSortOptionChange = onSortOptionChange,
+                    )
+                }
+
+                when {
+                    uiState.totalDocuments == 0 -> {
+                        item {
+                            EmptyDocumentsCard(onAddDocumentClick = onAddDocumentClick)
+                        }
                     }
-                } else {
-                    items(items = uiState.documents, key = { document -> document.id }) { document ->
-                        DocumentCard(
-                            document = document,
-                            onClick = { onDocumentClick(document.id) },
-                        )
+
+                    uiState.documents.isEmpty() -> {
+                        item {
+                            EmptyFilteredDocumentsCard(
+                                onResetFiltersClick = onResetFiltersClick,
+                            )
+                        }
+                    }
+
+                    else -> {
+                        items(items = uiState.documents, key = { document -> document.id }) { document ->
+                            DocumentCard(
+                                document = document,
+                                onClick = { onDocumentClick(document.id) },
+                            )
+                        }
                     }
                 }
             }
@@ -137,8 +172,22 @@ fun DocumentsListScreen(
 @Composable
 private fun VaultOverviewCard(
     totalDocuments: Int,
+    visibleDocuments: Int,
     modifier: Modifier = Modifier,
 ) {
+    val countLabel = if (totalDocuments == visibleDocuments) {
+        stringResource(
+            id = R.string.documents_count,
+            totalDocuments,
+        )
+    } else {
+        stringResource(
+            id = R.string.documents_count_filtered,
+            visibleDocuments,
+            totalDocuments,
+        )
+    }
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
@@ -190,15 +239,149 @@ private fun VaultOverviewCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = stringResource(
-                        id = R.string.documents_count,
-                        totalDocuments,
-                    ),
+                    text = countLabel,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun DisplayControlsCard(
+    selectedCategory: DocumentCategory?,
+    selectedExpirationFilter: DocumentsExpirationFilter,
+    selectedSortOption: DocumentsSortOption,
+    onCategoryFilterChange: (DocumentCategory?) -> Unit,
+    onExpirationFilterChange: (DocumentsExpirationFilter) -> Unit,
+    onSortOptionChange: (DocumentsSortOption) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    modifier = Modifier.size(30.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(7.dp),
+                        imageVector = Icons.Outlined.Tune,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
+                Text(
+                    text = stringResource(id = R.string.documents_controls_title),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+
+            Text(
+                text = stringResource(id = R.string.documents_filter_category_label),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                FilterChip(
+                    selected = selectedCategory == null,
+                    onClick = { onCategoryFilterChange(null) },
+                    label = { Text(text = stringResource(id = R.string.documents_filter_all_categories)) },
+                )
+                DocumentCategory.entries.forEach { category ->
+                    FilterChip(
+                        selected = selectedCategory == category,
+                        onClick = { onCategoryFilterChange(category) },
+                        label = { Text(text = category.displayName) },
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(id = R.string.documents_filter_expiration_label),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DocumentsExpirationFilter.entries.forEach { filter ->
+                    FilterChip(
+                        selected = selectedExpirationFilter == filter,
+                        onClick = { onExpirationFilterChange(filter) },
+                        label = {
+                            Text(
+                                text = expirationFilterLabel(filter = filter),
+                            )
+                        },
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(id = R.string.documents_sort_label),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                DocumentsSortOption.entries.forEach { sortOption ->
+                    FilterChip(
+                        selected = selectedSortOption == sortOption,
+                        onClick = { onSortOptionChange(sortOption) },
+                        label = {
+                            Text(text = sortOptionLabel(sortOption = sortOption))
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun expirationFilterLabel(filter: DocumentsExpirationFilter): String {
+    return when (filter) {
+        DocumentsExpirationFilter.ALL -> stringResource(id = R.string.documents_filter_all_expiration)
+        DocumentsExpirationFilter.EXPIRING_SOON -> stringResource(id = R.string.documents_filter_expiring_soon)
+        DocumentsExpirationFilter.EXPIRED -> stringResource(id = R.string.documents_filter_expired)
+        DocumentsExpirationFilter.NO_DATE -> stringResource(id = R.string.documents_filter_no_date)
+    }
+}
+
+@Composable
+private fun sortOptionLabel(sortOption: DocumentsSortOption): String {
+    return when (sortOption) {
+        DocumentsSortOption.EXPIRATION_ASC -> stringResource(id = R.string.documents_sort_expiration_asc)
+        DocumentsSortOption.TITLE_ASC -> stringResource(id = R.string.documents_sort_title_asc)
     }
 }
 
@@ -256,6 +439,55 @@ private fun EmptyDocumentsCard(
                     Text(text = stringResource(id = R.string.documents_empty_action))
                 },
             )
+        }
+    }
+}
+
+@Composable
+private fun EmptyFilteredDocumentsCard(
+    onResetFiltersClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 22.dp, vertical = 28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(52.dp),
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = MaterialTheme.shapes.large,
+            ) {
+                Icon(
+                    modifier = Modifier.padding(12.dp),
+                    imageVector = Icons.Outlined.Tune,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                )
+            }
+            Text(
+                text = stringResource(id = R.string.documents_filtered_empty_title),
+                style = MaterialTheme.typography.titleMedium,
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = stringResource(id = R.string.documents_filtered_empty_description),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
+            OutlinedButton(onClick = onResetFiltersClick) {
+                Text(text = stringResource(id = R.string.documents_filtered_empty_action))
+            }
         }
     }
 }
@@ -434,6 +666,10 @@ private fun DocumentsListEmptyPreview() {
             uiState = DocumentsListUiState(),
             onAddDocumentClick = {},
             onDocumentClick = {},
+            onCategoryFilterChange = {},
+            onExpirationFilterChange = {},
+            onSortOptionChange = {},
+            onResetFiltersClick = {},
         )
     }
 }
@@ -463,9 +699,16 @@ private fun DocumentsListFilledPreview() {
 
     SafeVaultTheme {
         DocumentsListScreen(
-            uiState = DocumentsListUiState(documents = sampleDocuments),
+            uiState = DocumentsListUiState(
+                totalDocuments = sampleDocuments.size,
+                documents = sampleDocuments,
+            ),
             onAddDocumentClick = {},
             onDocumentClick = {},
+            onCategoryFilterChange = {},
+            onExpirationFilterChange = {},
+            onSortOptionChange = {},
+            onResetFiltersClick = {},
         )
     }
 }
