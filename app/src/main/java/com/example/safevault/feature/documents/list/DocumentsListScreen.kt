@@ -1,8 +1,13 @@
 package com.example.safevault.feature.documents.list
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,55 +15,54 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Tune
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.safevault.R
 import com.example.safevault.domain.model.DocumentCategory
 import com.example.safevault.domain.model.VaultDocument
 import com.example.safevault.ui.theme.SafeVaultTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
-import kotlin.math.floor
 
-private const val ONE_DAY_MILLIS = 86_400_000L
-private const val WARNING_THRESHOLD_DAYS = 30L
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DocumentsListScreen(
     uiState: DocumentsListUiState,
@@ -75,53 +79,35 @@ fun DocumentsListScreen(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
+                        MaterialTheme.colorScheme.background,
                     ),
                 ),
             ),
     ) {
         Scaffold(
             containerColor = Color.Transparent,
-            topBar = {
-                LargeTopAppBar(
-                    title = {
-                        Text(
-                            text = stringResource(id = R.string.documents_screen_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                    },
-                    colors = TopAppBarDefaults.largeTopAppBarColors(
-                        containerColor = Color.Transparent,
-                    ),
-                )
-            },
             floatingActionButton = {
-                ExtendedFloatingActionButton(
-                    onClick = onAddDocumentClick,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = null,
-                        )
-                    },
-                    text = {
-                        Text(text = stringResource(id = R.string.documents_add_short))
-                    },
-                )
+                AddDocumentFab(onClick = onAddDocumentClick)
             },
+            floatingActionButtonPosition = FabPosition.End,
         ) { innerPadding ->
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     start = 20.dp,
                     end = 20.dp,
-                    top = innerPadding.calculateTopPadding() + 8.dp,
-                    bottom = innerPadding.calculateBottomPadding() + 96.dp,
+                    top = innerPadding.calculateTopPadding() + 20.dp,
+                    bottom = innerPadding.calculateBottomPadding() + 104.dp,
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 item {
-                    VaultOverviewCard(
+                    DashboardHeader()
+                }
+
+                item {
+                    DashboardOverviewCard(
                         totalDocuments = uiState.totalDocuments,
                         visibleDocuments = uiState.documents.size,
                     )
@@ -152,7 +138,7 @@ fun DocumentsListScreen(
                     }
 
                     else -> {
-                        items(items = uiState.documents, key = { document -> document.id }) { document ->
+                        items(items = uiState.documents, key = { it.id }) { document ->
                             DocumentCard(
                                 document = document,
                                 onClick = { onDocumentClick(document.id) },
@@ -166,31 +152,49 @@ fun DocumentsListScreen(
 }
 
 @Composable
-private fun VaultOverviewCard(
+private fun DashboardHeader(modifier: Modifier = Modifier) {
+    Image(
+        painter = painterResource(id = R.drawable.safevault_logo_wordmark),
+        contentDescription = stringResource(id = R.string.documents_screen_title),
+        modifier = modifier.height(20.dp),
+    )
+}
+
+@Composable
+private fun AddDocumentFab(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = stringResource(id = R.string.documents_add_short),
+        )
+    }
+}
+
+@Composable
+private fun DashboardOverviewCard(
     totalDocuments: Int,
     visibleDocuments: Int,
     modifier: Modifier = Modifier,
 ) {
-    val countLabel = if (totalDocuments == visibleDocuments) {
-        stringResource(
-            id = R.string.documents_count,
-            totalDocuments,
-        )
-    } else {
-        stringResource(
-            id = R.string.documents_count_filtered,
-            visibleDocuments,
-            totalDocuments,
-        )
-    }
+    val progress = if (totalDocuments == 0) 0f else visibleDocuments.toFloat() / totalDocuments.toFloat()
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 700),
+        label = "overview_progress",
+    )
 
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Box(
             modifier = Modifier
@@ -199,45 +203,48 @@ private fun VaultOverviewCard(
                 .background(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.10f),
-                            MaterialTheme.colorScheme.surface,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.84f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.72f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
                         ),
                     ),
                 )
-                .padding(24.dp),
+                .padding(18.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    text = stringResource(id = R.string.documents_overview_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom,
                 ) {
-                    Surface(
-                        modifier = Modifier.size(36.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-                        shape = MaterialTheme.shapes.medium,
-                    ) {
-                        Icon(
-                            modifier = Modifier.padding(8.dp),
-                            imageVector = Icons.Outlined.Lock,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
                     Text(
-                        text = stringResource(id = R.string.documents_overview_title),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = visibleDocuments.toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Text(
+                        text = pluralStringResource(
+                            id = R.plurals.documents_count,
+                            count = totalDocuments,
+                            totalDocuments,
+                        ),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.88f),
                     )
                 }
-                Text(
-                    text = stringResource(id = R.string.documents_overview_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = countLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(MaterialTheme.shapes.large),
+                    color = MaterialTheme.colorScheme.tertiary,
+                    trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
                 )
             }
         }
@@ -255,15 +262,13 @@ private fun DisplayControlsCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -282,16 +287,11 @@ private fun DisplayControlsCard(
                     )
                 }
                 Text(
-                    text = stringResource(id = R.string.documents_controls_title),
+                    text = stringResource(id = R.string.documents_filter_category_label),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
 
-            Text(
-                text = stringResource(id = R.string.documents_filter_category_label),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -302,12 +302,20 @@ private fun DisplayControlsCard(
                     selected = selectedCategory == null,
                     onClick = { onCategoryFilterChange(null) },
                     label = { Text(text = stringResource(id = R.string.documents_filter_all_categories)) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
                 )
                 DocumentCategory.entries.forEach { category ->
                     FilterChip(
                         selected = selectedCategory == category,
                         onClick = { onCategoryFilterChange(category) },
-                        label = { Text(text = category.displayName) },
+                        label = { Text(text = stringResource(id = category.labelRes)) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
                     )
                 }
             }
@@ -329,19 +337,17 @@ private fun EmptyDocumentsCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 28.dp),
+                .padding(horizontal = 22.dp, vertical = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(56.dp),
                 color = MaterialTheme.colorScheme.secondaryContainer,
                 shape = MaterialTheme.shapes.large,
             ) {
@@ -363,18 +369,9 @@ private fun EmptyDocumentsCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
-            ExtendedFloatingActionButton(
-                onClick = onAddDocumentClick,
-                icon = {
-                    Icon(
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = null,
-                    )
-                },
-                text = {
-                    Text(text = stringResource(id = R.string.documents_empty_action))
-                },
-            )
+            Button(onClick = onAddDocumentClick) {
+                Text(text = stringResource(id = R.string.documents_empty_action))
+            }
         }
     }
 }
@@ -387,19 +384,17 @@ private fun EmptyFilteredDocumentsCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 28.dp),
+                .padding(horizontal = 22.dp, vertical = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(56.dp),
                 color = MaterialTheme.colorScheme.tertiaryContainer,
                 shape = MaterialTheme.shapes.large,
             ) {
@@ -434,72 +429,109 @@ private fun DocumentCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val expirationInfo = rememberExpirationInfo(expirationTimestampMillis = document.expirationTimestampMillis)
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.985f else 1f,
+        animationSpec = tween(durationMillis = 140),
+        label = "document_card_scale",
+    )
 
     Card(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = onClick,
+            ),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (pressed) 0.dp else 1.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Row(
-                    modifier = Modifier.weight(1f),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    if (document.imageUri != null) {
-                        AsyncImage(
-                            model = document.imageUri,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(MaterialTheme.shapes.medium),
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                if (document.imageUri != null) {
+                    AsyncImage(
+                        model = document.imageUri,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(60.dp)
+                            .clip(MaterialTheme.shapes.large),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.size(60.dp),
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.58f),
                     ) {
-                        Text(
-                            text = document.title,
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            text = document.category.displayName,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        Icon(
+                            modifier = Modifier.padding(16.dp),
+                            imageVector = Icons.Outlined.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
-                ExpirationBadge(expirationInfo = expirationInfo)
-            }
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = document.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Surface(
+                        shape = MaterialTheme.shapes.large,
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.58f),
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            text = stringResource(id = document.category.labelRes),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        )
+                    }
+                }
 
-            Text(
-                text = expirationLabel(expirationTimestampMillis = document.expirationTimestampMillis),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+                Surface(
+                    modifier = Modifier.size(32.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(8.dp),
+                        imageVector = Icons.AutoMirrored.Outlined.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
 
             if (document.note.isNotBlank()) {
                 Text(
                     text = document.note,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -507,95 +539,7 @@ private fun DocumentCard(
 }
 
 @Composable
-private fun ExpirationBadge(
-    expirationInfo: ExpirationInfo,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        modifier = modifier,
-        color = expirationInfo.containerColor,
-        shape = MaterialTheme.shapes.large,
-    ) {
-        Text(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            text = expirationInfo.label,
-            style = MaterialTheme.typography.labelMedium,
-            color = expirationInfo.contentColor,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
-}
-
-@Composable
-private fun rememberExpirationInfo(
-    expirationTimestampMillis: Long?,
-): ExpirationInfo {
-    val colorScheme = MaterialTheme.colorScheme
-    val nowMillis = System.currentTimeMillis()
-
-    if (expirationTimestampMillis == null) {
-        return ExpirationInfo(
-            label = stringResource(id = R.string.documents_badge_no_date),
-            containerColor = colorScheme.surfaceVariant,
-            contentColor = colorScheme.onSurfaceVariant,
-        )
-    }
-
-    val remainingDays = floor(
-        (expirationTimestampMillis - nowMillis).toDouble() / ONE_DAY_MILLIS.toDouble(),
-    ).toLong()
-
-    return when {
-        remainingDays < 0L -> ExpirationInfo(
-            label = stringResource(id = R.string.documents_badge_expired),
-            containerColor = colorScheme.errorContainer,
-            contentColor = colorScheme.onErrorContainer,
-        )
-
-        remainingDays == 0L -> ExpirationInfo(
-            label = stringResource(id = R.string.documents_badge_today),
-            containerColor = colorScheme.errorContainer,
-            contentColor = colorScheme.onErrorContainer,
-        )
-
-        remainingDays <= WARNING_THRESHOLD_DAYS -> ExpirationInfo(
-            label = stringResource(
-                id = R.string.documents_badge_warning,
-                remainingDays.toInt(),
-            ),
-            containerColor = colorScheme.tertiaryContainer,
-            contentColor = colorScheme.onTertiaryContainer,
-        )
-
-        else -> ExpirationInfo(
-            label = stringResource(id = R.string.documents_badge_valid),
-            containerColor = colorScheme.secondaryContainer,
-            contentColor = colorScheme.onSecondaryContainer,
-        )
-    }
-}
-
-@Composable
-private fun expirationLabel(expirationTimestampMillis: Long?): String {
-    if (expirationTimestampMillis == null) {
-        return stringResource(id = R.string.documents_expiration_no_date)
-    }
-
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
-    return stringResource(
-        id = R.string.documents_expiration_label,
-        formatter.format(Date(expirationTimestampMillis)),
-    )
-}
-
-private data class ExpirationInfo(
-    val label: String,
-    val containerColor: Color,
-    val contentColor: Color,
-)
-
-@Preview(showBackground = true)
-@Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 private fun DocumentsListEmptyPreview() {
     SafeVaultTheme {
         DocumentsListScreen(
@@ -608,16 +552,14 @@ private fun DocumentsListEmptyPreview() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 private fun DocumentsListFilledPreview() {
-    val now = System.currentTimeMillis()
     val sampleDocuments = listOf(
         VaultDocument(
             id = 1L,
             title = "Carte d'identite",
             category = DocumentCategory.IDENTITY,
-            expirationTimestampMillis = now + (8 * ONE_DAY_MILLIS),
             note = "Renouvellement a anticiper.",
             imageUri = null,
         ),
@@ -625,7 +567,6 @@ private fun DocumentsListFilledPreview() {
             id = 2L,
             title = "Assurance habitation",
             category = DocumentCategory.INSURANCE,
-            expirationTimestampMillis = now + (90 * ONE_DAY_MILLIS),
             note = "",
             imageUri = null,
         ),

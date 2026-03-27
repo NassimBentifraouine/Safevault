@@ -2,9 +2,11 @@
 .gradle
 /.gradle-local/
 /.gradle-local-room/
+/.gradle-user-home/
 /.android-local/
 /.kotlin/
 /local.properties
+/.idea/
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -17,4 +19,3 @@
 /captures
 .externalNativeBuild
 .cxx
-local.properties

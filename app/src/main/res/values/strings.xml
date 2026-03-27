@@ -1,73 +1,70 @@
-<resources>
+﻿<resources>
     <string name="app_name">SafeVault</string>
+
     <string name="documents_screen_title">SafeVault</string>
     <string name="documents_add_short">Ajouter</string>
     <string name="documents_overview_title">Coffre personnel</string>
-    <string name="documents_overview_description">Vos documents sensibles, centralises dans une interface claire et soignee.</string>
-    <string name="documents_count">%1$d document(s)</string>
-    <string name="documents_count_filtered">%1$d sur %2$d document(s)</string>
-    <string name="documents_controls_title">Affichage intelligent</string>
-    <string name="documents_filter_category_label">Filtrer par categorie</string>
+    <plurals name="documents_count">
+        <item quantity="one">%1$d document</item>
+        <item quantity="other">%1$d documents</item>
+    </plurals>
+    <string name="documents_filter_category_label">Filtrer par catégorie</string>
     <string name="documents_filter_all_categories">Toutes</string>
     <string name="documents_empty_title">Votre coffre est vide</string>
-    <string name="documents_empty_description">Ajoutez d\'abord vos documents essentiels (identite, sante, assurance, finance) pour demarrer.</string>
+    <string name="documents_empty_description">Ajoutez d\'abord vos documents essentiels (identité, santé, assurance, finance) pour démarrer.</string>
     <string name="documents_empty_action">Ajouter le premier document</string>
     <string name="documents_filtered_empty_title">Aucun document ne correspond</string>
-    <string name="documents_filtered_empty_description">Ajustez vos filtres pour afficher des documents ou revenez a une vue complete.</string>
-    <string name="documents_filtered_empty_action">Reinitialiser les filtres</string>
-    <string name="documents_expiration_no_date">Pas de date d\'expiration</string>
-    <string name="documents_expiration_label">Echeance: %1$s</string>
-    <string name="documents_badge_no_date">Sans date</string>
-    <string name="documents_badge_expired">Expire</string>
-    <string name="documents_badge_today">Expire aujourd\'hui</string>
-    <string name="documents_badge_warning">Expire dans %1$d j</string>
-    <string name="documents_badge_valid">Valide</string>
+    <string name="documents_filtered_empty_description">Ajustez vos filtres pour afficher des documents ou revenez à une vue complète.</string>
+    <string name="documents_filtered_empty_action">Réinitialiser les filtres</string>
+
     <string name="document_add_title">Nouveau document</string>
     <string name="document_add_subtitle">Enregistrez vos informations importantes dans votre coffre personnel.</string>
     <string name="document_add_save">Enregistrer</string>
     <string name="document_add_section_main">Informations principales</string>
     <string name="document_add_label_title">Titre</string>
-    <string name="document_add_placeholder_title">Ex: Carte nationale d\'identite</string>
+    <string name="document_add_placeholder_title">Ex : Carte nationale d\'identité</string>
     <string name="document_add_error_title_required">Le titre est obligatoire.</string>
-    <string name="document_add_label_category">Categorie</string>
-    <string name="document_add_section_expiration">Echeance</string>
-    <string name="document_add_expiration_none">Aucune date selectionnee</string>
-    <string name="document_add_expiration_pick">Choisir une date</string>
-    <string name="document_add_expiration_clear">Retirer</string>
+    <string name="document_add_label_category">Catégorie</string>
     <string name="document_add_section_note">Note</string>
-    <string name="document_add_placeholder_note">Ajoutez un contexte utile: numero, rappel, informations de suivi...</string>
+    <string name="document_add_placeholder_note">Ajoutez un contexte utile : numéro, rappel, informations de suivi…</string>
     <string name="document_add_label_image">Image (optionnel)</string>
-    <string name="document_add_pick_image">Choisir une image</string>
     <string name="document_add_remove_image">Retirer</string>
-    <string name="document_add_no_image">Aucune image selectionnee</string>
-    <string name="document_add_date_confirm">Valider</string>
-    <string name="document_add_date_cancel">Annuler</string>
+    <string name="document_image_hint_title">Ajoutez une photo du document</string>
+    <string name="document_image_hint_body">Optionnel mais utile pour retrouver rapidement votre document.</string>
+
     <string name="document_edit_title">Modifier le document</string>
-    <string name="document_edit_subtitle">Mettez a jour vos informations pour garder un coffre toujours fiable.</string>
+    <string name="document_edit_subtitle">Mettez à jour vos informations pour garder un coffre toujours fiable.</string>
     <string name="document_edit_save">Enregistrer les modifications</string>
     <string name="document_edit_not_found_title">Document introuvable</string>
     <string name="document_edit_not_found_body">Impossible de modifier ce document car il n\'est plus disponible.</string>
-    <string name="document_detail_title">Detail du document</string>
+
+    <string name="document_detail_title">Détail du document</string>
     <string name="document_detail_edit">Modifier le document</string>
     <string name="document_detail_not_found_title">Document introuvable</string>
-    <string name="document_detail_not_found_body">Ce document n\'existe plus ou a deja ete supprime.</string>
-    <string name="document_detail_back">Retour</string>
-    <string name="document_detail_category_label">Categorie</string>
-    <string name="document_detail_expiration_label">Echeance</string>
-    <string name="document_detail_expiration_none">Aucune date d\'expiration</string>
+    <string name="document_detail_not_found_body">Ce document n\'existe plus ou a déjà été supprimé.</string>
+    <string name="action_back">Retour</string>
+    <string name="document_detail_category_label">Catégorie</string>
     <string name="document_detail_note_label">Note</string>
     <string name="document_detail_note_none">Aucune note</string>
     <string name="document_detail_image_label">Image</string>
-    <string name="document_detail_image_none">Aucune image associee</string>
+    <string name="document_detail_image_none">Aucune image associée</string>
     <string name="document_detail_delete">Supprimer le document</string>
     <string name="document_detail_delete_confirm_title">Confirmer la suppression</string>
-    <string name="document_detail_delete_confirm_body">Cette action est irreversible.</string>
+    <string name="document_detail_delete_confirm_body">Cette action est irréversible.</string>
     <string name="document_detail_delete_confirm_action">Supprimer</string>
     <string name="document_detail_delete_cancel">Annuler</string>
-    <string name="snackbar_document_saved">Document ajoute avec succes.</string>
+
+    <string name="snackbar_document_saved">Document ajouté avec succès.</string>
     <string name="snackbar_document_save_failed">Impossible d\'enregistrer le document.</string>
-    <string name="snackbar_document_updated">Document mis a jour avec succes.</string>
-    <string name="snackbar_document_update_failed">Impossible de mettre a jour le document.</string>
-    <string name="snackbar_document_deleted">Document supprime.</string>
+    <string name="snackbar_document_updated">Document mis à jour avec succès.</string>
+    <string name="snackbar_document_update_failed">Impossible de mettre à jour le document.</string>
+    <string name="snackbar_document_deleted">Document supprimé.</string>
     <string name="snackbar_document_delete_failed">Impossible de supprimer le document.</string>
+
+    <string name="category_identity">Identité</string>
+    <string name="category_health">Santé</string>
+    <string name="category_insurance">Assurance</string>
+    <string name="category_education">Études</string>
+    <string name="category_finance">Finance</string>
+    <string name="category_other">Autre</string>
 </resources>

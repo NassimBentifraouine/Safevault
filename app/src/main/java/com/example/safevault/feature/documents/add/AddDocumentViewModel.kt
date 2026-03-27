@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class AddDocumentViewModel(
@@ -36,10 +37,6 @@ class AddDocumentViewModel(
 
     fun onCategoryChange(value: DocumentCategory) {
         _uiState.update { state -> state.copy(category = value) }
-    }
-
-    fun onExpirationDateChange(value: Long?) {
-        _uiState.update { state -> state.copy(expirationTimestampMillis = value) }
     }
 
     fun onNoteChange(value: String) {
@@ -67,13 +64,13 @@ class AddDocumentViewModel(
                     document = VaultDocument(
                         title = normalizedTitle,
                         category = currentState.category,
-                        expirationTimestampMillis = currentState.expirationTimestampMillis,
                         note = currentState.note.trim(),
                         imageUri = currentState.imageUri,
                     ),
                 )
                 _events.emit(AddDocumentEvent.Saved)
-            } catch (_: Throwable) {
+            } catch (exception: Exception) {
+                if (exception is CancellationException) throw exception
                 _events.emit(AddDocumentEvent.SaveFailed)
             } finally {
                 _uiState.update { state -> state.copy(isSaving = false) }

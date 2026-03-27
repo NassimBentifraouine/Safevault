@@ -8,7 +8,6 @@ data class EditDocumentUiState(
     val isNotFound: Boolean = false,
     val title: String = "",
     val category: DocumentCategory = DocumentCategory.IDENTITY,
-    val expirationTimestampMillis: Long? = null,
     val note: String = "",
     val imageUri: String? = null,
     val titleError: Boolean = false,

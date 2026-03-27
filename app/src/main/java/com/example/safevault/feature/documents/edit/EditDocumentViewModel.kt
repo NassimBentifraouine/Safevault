@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class EditDocumentViewModel(
@@ -41,10 +42,6 @@ class EditDocumentViewModel(
 
     fun onCategoryChange(value: DocumentCategory) {
         _uiState.update { state -> state.copy(category = value) }
-    }
-
-    fun onExpirationDateChange(value: Long?) {
-        _uiState.update { state -> state.copy(expirationTimestampMillis = value) }
     }
 
     fun onNoteChange(value: String) {
@@ -75,13 +72,13 @@ class EditDocumentViewModel(
                         id = documentId,
                         title = normalizedTitle,
                         category = currentState.category,
-                        expirationTimestampMillis = currentState.expirationTimestampMillis,
                         note = currentState.note.trim(),
                         imageUri = currentState.imageUri,
                     ),
                 )
                 _events.emit(EditDocumentEvent.Updated)
-            } catch (_: Throwable) {
+            } catch (exception: Exception) {
+                if (exception is CancellationException) throw exception
                 _events.emit(EditDocumentEvent.UpdateFailed)
             } finally {
                 _uiState.update { state -> state.copy(isSaving = false) }
@@ -91,9 +88,12 @@ class EditDocumentViewModel(
 
     private fun loadDocument() {
         viewModelScope.launch {
-            val document = runCatching {
+            val document = try {
                 documentsRepository.getDocumentById(documentId)
-            }.getOrNull()
+            } catch (exception: Exception) {
+                if (exception is CancellationException) throw exception
+                null
+            }
 
             if (document == null) {
                 _uiState.update { state ->
@@ -110,7 +110,6 @@ class EditDocumentViewModel(
                     isLoading = false,
                     title = document.title,
                     category = document.category,
-                    expirationTimestampMillis = document.expirationTimestampMillis,
                     note = document.note,
                     imageUri = document.imageUri,
                 )

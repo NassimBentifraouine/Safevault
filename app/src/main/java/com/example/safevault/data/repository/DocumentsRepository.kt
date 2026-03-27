@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface DocumentsRepository {
     val documents: Flow<List<VaultDocument>>
 
+    fun observeDocumentById(id: Long): Flow<VaultDocument?>
+
     suspend fun getDocumentById(id: Long): VaultDocument?
 
     suspend fun upsertDocument(document: VaultDocument): Long

@@ -3,13 +3,13 @@ package com.example.safevault.data.local.mapper
 import com.example.safevault.data.local.entity.DocumentEntity
 import com.example.safevault.domain.model.DocumentCategory
 import com.example.safevault.domain.model.VaultDocument
+import java.time.Instant
 
 fun DocumentEntity.toDomain(): VaultDocument {
     return VaultDocument(
         id = id,
         title = title,
         category = category.toDocumentCategory(),
-        expirationTimestampMillis = expirationTimestampMillis,
         note = note,
         imageUri = imageUri,
     )
@@ -20,14 +20,13 @@ fun VaultDocument.toEntity(existingCreatedAtMillis: Long? = null): DocumentEntit
         id = id,
         title = title,
         category = category.name,
-        expirationTimestampMillis = expirationTimestampMillis,
         note = note,
         imageUri = imageUri,
-        createdAtMillis = existingCreatedAtMillis ?: System.currentTimeMillis(),
+        createdAtMillis = existingCreatedAtMillis ?: Instant.now().toEpochMilli(),
     )
 }
 
 private fun String.toDocumentCategory(): DocumentCategory {
-    return DocumentCategory.entries.firstOrNull { category -> category.name == this }
+    return DocumentCategory.entries.firstOrNull { it.name == this }
         ?: DocumentCategory.OTHER
 }

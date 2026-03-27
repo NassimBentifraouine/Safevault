@@ -38,7 +38,6 @@ fun EditDocumentRoute(
         onSaveClick = viewModel::onSaveClick,
         onTitleChange = viewModel::onTitleChange,
         onCategoryChange = viewModel::onCategoryChange,
-        onExpirationDateChange = viewModel::onExpirationDateChange,
         onNoteChange = viewModel::onNoteChange,
         onImagePicked = viewModel::onImagePicked,
     )

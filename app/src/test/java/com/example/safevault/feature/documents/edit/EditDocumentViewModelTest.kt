@@ -28,9 +28,8 @@ class EditDocumentViewModelTest {
             VaultDocument(
                 title = "Attestation mutuelle",
                 category = DocumentCategory.INSURANCE,
-                expirationTimestampMillis = null,
                 note = "Ancienne note",
-                imageUri = null,
+                imageUri = "content://media/external/images/media/7",
             ),
         )
 
@@ -43,6 +42,7 @@ class EditDocumentViewModelTest {
         assertFalse(viewModel.uiState.value.isLoading)
         assertEquals("Attestation mutuelle", viewModel.uiState.value.title)
         assertEquals(DocumentCategory.INSURANCE, viewModel.uiState.value.category)
+        assertEquals("content://media/external/images/media/7", viewModel.uiState.value.imageUri)
     }
 
     @Test
@@ -52,7 +52,6 @@ class EditDocumentViewModelTest {
             VaultDocument(
                 title = "Permis",
                 category = DocumentCategory.IDENTITY,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),
@@ -65,6 +64,7 @@ class EditDocumentViewModelTest {
 
         viewModel.onTitleChange("  Permis international  ")
         viewModel.onNoteChange("  A scanner recto verso  ")
+        viewModel.onImagePicked("content://media/external/images/media/88")
         val eventDeferred = async(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.events.first()
         }
@@ -76,6 +76,7 @@ class EditDocumentViewModelTest {
         val updated = repository.getDocumentById(documentId)
         assertEquals("Permis international", updated?.title)
         assertEquals("A scanner recto verso", updated?.note)
+        assertEquals("content://media/external/images/media/88", updated?.imageUri)
     }
 
     @Test

@@ -28,7 +28,6 @@ class DocumentsListViewModelTest {
             VaultDocument(
                 title = "Carte identite",
                 category = DocumentCategory.IDENTITY,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),
@@ -37,7 +36,6 @@ class DocumentsListViewModelTest {
             VaultDocument(
                 title = "Carnet vaccination",
                 category = DocumentCategory.HEALTH,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),
@@ -46,7 +44,6 @@ class DocumentsListViewModelTest {
             VaultDocument(
                 title = "Mutuelle",
                 category = DocumentCategory.HEALTH,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),

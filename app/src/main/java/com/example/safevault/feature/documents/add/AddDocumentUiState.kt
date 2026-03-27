@@ -5,7 +5,6 @@ import com.example.safevault.domain.model.DocumentCategory
 data class AddDocumentUiState(
     val title: String = "",
     val category: DocumentCategory = DocumentCategory.IDENTITY,
-    val expirationTimestampMillis: Long? = null,
     val note: String = "",
     val imageUri: String? = null,
     val isSaving: Boolean = false,

@@ -11,7 +11,11 @@ class RoomDocumentsRepository(
     private val documentsDao: DocumentsDao,
 ) : DocumentsRepository {
     override val documents: Flow<List<VaultDocument>> = documentsDao.observeAll()
-        .map { entities -> entities.map { entity -> entity.toDomain() } }
+        .map { entities -> entities.map { it.toDomain() } }
+
+    override fun observeDocumentById(id: Long): Flow<VaultDocument?> {
+        return documentsDao.observeById(id).map { entity -> entity?.toDomain() }
+    }
 
     override suspend fun getDocumentById(id: Long): VaultDocument? {
         return documentsDao.getById(id)?.toDomain()

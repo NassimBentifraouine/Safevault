@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.CancellationException
 
 class DocumentsListViewModel(
     documentsRepository: DocumentsRepository,
@@ -20,7 +21,10 @@ class DocumentsListViewModel(
     private val selectedCategory = MutableStateFlow<DocumentCategory?>(null)
 
     private val documentsStream = documentsRepository.documents
-        .catch { emit(emptyList()) }
+        .catch { throwable ->
+            if (throwable is CancellationException) throw throwable
+            emit(emptyList())
+        }
 
     val uiState: StateFlow<DocumentsListUiState> = combine(
         documentsStream,

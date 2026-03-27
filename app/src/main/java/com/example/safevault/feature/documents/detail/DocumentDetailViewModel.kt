@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
 class DocumentDetailViewModel(
@@ -39,7 +39,8 @@ class DocumentDetailViewModel(
             try {
                 documentsRepository.deleteDocumentById(currentDocument.id)
                 _events.emit(DocumentDetailEvent.Deleted)
-            } catch (_: Throwable) {
+            } catch (exception: Exception) {
+                if (exception is CancellationException) throw exception
                 _events.emit(DocumentDetailEvent.DeleteFailed)
             } finally {
                 _uiState.update { state -> state.copy(isDeleting = false) }
@@ -49,9 +50,11 @@ class DocumentDetailViewModel(
 
     private fun observeDocument() {
         viewModelScope.launch {
-            documentsRepository.documents
-                .map { documents -> documents.firstOrNull { document -> document.id == documentId } }
-                .catch { emit(null) }
+            documentsRepository.observeDocumentById(documentId)
+                .catch { throwable ->
+                    if (throwable is CancellationException) throw throwable
+                    emit(null)
+                }
                 .collect { document ->
                     _uiState.update { state ->
                         state.copy(

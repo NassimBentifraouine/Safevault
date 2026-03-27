@@ -39,6 +39,7 @@ class AddDocumentViewModelTest {
         viewModel.onTitleChange("  Passeport  ")
         viewModel.onCategoryChange(DocumentCategory.IDENTITY)
         viewModel.onNoteChange("  Renouveler avant juillet  ")
+        viewModel.onImagePicked("content://media/external/images/media/42")
 
         val eventDeferred = async(UnconfinedTestDispatcher(testScheduler)) {
             viewModel.events.first()
@@ -52,5 +53,6 @@ class AddDocumentViewModelTest {
         assertEquals(1, savedDocuments.size)
         assertEquals("Passeport", savedDocuments.first().title)
         assertEquals("Renouveler avant juillet", savedDocuments.first().note)
+        assertEquals("content://media/external/images/media/42", savedDocuments.first().imageUri)
     }
 }

@@ -4,11 +4,18 @@ import com.example.safevault.domain.model.VaultDocument
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 
 class InMemoryDocumentsRepository : DocumentsRepository {
     private val inMemoryDocuments = MutableStateFlow<List<VaultDocument>>(emptyList())
 
     override val documents: Flow<List<VaultDocument>> = inMemoryDocuments.asStateFlow()
+
+    override fun observeDocumentById(id: Long): Flow<VaultDocument?> {
+        return inMemoryDocuments.asStateFlow().map { docs ->
+            docs.firstOrNull { document -> document.id == id }
+        }
+    }
 
     override suspend fun getDocumentById(id: Long): VaultDocument? {
         return inMemoryDocuments.value.firstOrNull { document -> document.id == id }

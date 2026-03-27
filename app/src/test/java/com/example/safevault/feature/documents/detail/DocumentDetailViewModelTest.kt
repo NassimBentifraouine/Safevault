@@ -28,7 +28,6 @@ class DocumentDetailViewModelTest {
             VaultDocument(
                 title = "Carte vitale",
                 category = DocumentCategory.HEALTH,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),
@@ -51,7 +50,6 @@ class DocumentDetailViewModelTest {
             VaultDocument(
                 title = "Contrat assurance",
                 category = DocumentCategory.INSURANCE,
-                expirationTimestampMillis = null,
                 note = "",
                 imageUri = null,
             ),

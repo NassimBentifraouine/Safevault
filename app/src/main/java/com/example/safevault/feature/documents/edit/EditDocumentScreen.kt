@@ -1,15 +1,9 @@
 package com.example.safevault.feature.documents.edit
 
-import android.app.Activity
-import android.app.DatePickerDialog
-import android.content.Context
-import android.content.ContextWrapper
-import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,50 +14,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.example.safevault.R
 import com.example.safevault.domain.model.DocumentCategory
+import com.example.safevault.feature.documents.common.DocumentCategorySelector
+import com.example.safevault.feature.documents.common.DocumentFormHeader
+import com.example.safevault.feature.documents.common.DocumentFormSectionCard
+import com.example.safevault.feature.documents.common.DocumentImageField
 import com.example.safevault.ui.theme.SafeVaultTheme
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,38 +56,20 @@ fun EditDocumentScreen(
     onSaveClick: () -> Unit,
     onTitleChange: (String) -> Unit,
     onCategoryChange: (DocumentCategory) -> Unit,
-    onExpirationDateChange: (Long?) -> Unit,
     onNoteChange: (String) -> Unit,
     onImagePicked: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val expirationLabel = rememberExpirationLabel(uiState.expirationTimestampMillis)
     val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        if (uri != null) {
-            runCatching {
-                context.contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                )
-            }
-            onImagePicked(uri.toString())
-        }
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri ->
+        onImagePicked(uri?.toString())
     }
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                    ),
-                ),
-            ),
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Scaffold(
             containerColor = Color.Transparent,
@@ -115,28 +80,32 @@ fun EditDocumentScreen(
                         IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.action_back),
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
                 )
             },
             bottomBar = {
                 if (!uiState.isNotFound) {
                     Surface(
                         color = MaterialTheme.colorScheme.surface,
-                        tonalElevation = 2.dp,
+                        tonalElevation = 1.dp,
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 14.dp),
+                                .padding(horizontal = 20.dp, vertical = 12.dp),
                         ) {
                             Button(
                                 onClick = onSaveClick,
                                 enabled = !uiState.isSaving && !uiState.isLoading,
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(vertical = 14.dp),
+                                shape = MaterialTheme.shapes.large,
                             ) {
                                 if (uiState.isSaving) {
                                     CircularProgressIndicator(
@@ -190,168 +159,68 @@ fun EditDocumentScreen(
                             .padding(innerPadding)
                             .verticalScroll(rememberScrollState())
                             .padding(horizontal = 20.dp, vertical = 12.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        HeroCard()
+                        DocumentFormHeader(
+                            title = stringResource(id = R.string.document_edit_title),
+                            subtitle = stringResource(id = R.string.document_edit_subtitle),
+                        )
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            ),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.document_add_section_main),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
+                        DocumentFormSectionCard(title = stringResource(id = R.string.document_add_section_main)) {
+                            OutlinedTextField(
+                                value = uiState.title,
+                                onValueChange = onTitleChange,
+                                label = { Text(text = stringResource(id = R.string.document_add_label_title)) },
+                                placeholder = { Text(text = stringResource(id = R.string.document_add_placeholder_title)) },
+                                supportingText = {
+                                    if (uiState.titleError) {
+                                        Text(text = stringResource(id = R.string.document_add_error_title_required))
+                                    }
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                ),
+                                isError = uiState.titleError,
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
 
-                                OutlinedTextField(
-                                    value = uiState.title,
-                                    onValueChange = onTitleChange,
-                                    label = { Text(text = stringResource(id = R.string.document_add_label_title)) },
-                                    placeholder = { Text(text = stringResource(id = R.string.document_add_placeholder_title)) },
-                                    supportingText = {
-                                        if (uiState.titleError) {
-                                            Text(text = stringResource(id = R.string.document_add_error_title_required))
-                                        }
-                                    },
-                                    isError = uiState.titleError,
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth(),
-                                )
-
-                                Text(
-                                    text = stringResource(id = R.string.document_add_label_category),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                CategorySelector(
-                                    selected = uiState.category,
-                                    onCategoryChange = onCategoryChange,
-                                )
-                            }
+                            Text(
+                                text = stringResource(id = R.string.document_add_label_category),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            DocumentCategorySelector(
+                                selected = uiState.category,
+                                onCategoryChange = onCategoryChange,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
                         }
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            ),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.document_add_section_expiration),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                Text(
-                                    text = expirationLabel,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    OutlinedButton(
-                                        onClick = {
-                                            showNativeDatePicker(
-                                                context = context,
-                                                initialDateMillis = uiState.expirationTimestampMillis
-                                                    ?: System.currentTimeMillis(),
-                                                onDateSelected = onExpirationDateChange,
-                                            )
-                                        },
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.CalendarMonth,
-                                            contentDescription = null,
-                                        )
-                                        Text(
-                                            modifier = Modifier.padding(start = 8.dp),
-                                            text = stringResource(id = R.string.document_add_expiration_pick),
-                                        )
-                                    }
-                                    TextButton(onClick = { onExpirationDateChange(null) }) {
-                                        Text(text = stringResource(id = R.string.document_add_expiration_clear))
-                                    }
-                                }
-                            }
-                        }
+                        DocumentFormSectionCard(title = stringResource(id = R.string.document_add_section_note)) {
+                            OutlinedTextField(
+                                value = uiState.note,
+                                onValueChange = onNoteChange,
+                                placeholder = { Text(text = stringResource(id = R.string.document_add_placeholder_note)) },
+                                modifier = Modifier.fillMaxWidth(),
+                                minLines = 4,
+                                maxLines = 6,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                ),
+                            )
 
-                        Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = MaterialTheme.shapes.extraLarge,
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                            ),
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(14.dp),
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.document_add_section_note),
-                                    style = MaterialTheme.typography.titleMedium,
-                                )
-                                OutlinedTextField(
-                                    value = uiState.note,
-                                    onValueChange = onNoteChange,
-                                    placeholder = { Text(text = stringResource(id = R.string.document_add_placeholder_note)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    minLines = 4,
-                                    maxLines = 6,
-                                )
-
-                                Text(
-                                    text = stringResource(id = R.string.document_add_label_image),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                    OutlinedButton(onClick = { pickImageLauncher.launch(arrayOf("image/*")) }) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.PhotoLibrary,
-                                            contentDescription = null,
-                                        )
-                                        Text(
-                                            modifier = Modifier.padding(start = 8.dp),
-                                            text = stringResource(id = R.string.document_add_pick_image),
-                                        )
-                                    }
-                                    TextButton(onClick = { onImagePicked(null) }) {
-                                        Text(text = stringResource(id = R.string.document_add_remove_image))
-                                    }
-                                }
-
-                                if (uiState.imageUri != null) {
-                                    AsyncImage(
-                                        model = uiState.imageUri,
-                                        contentDescription = null,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .size(180.dp)
-                                            .clip(RoundedCornerShape(16.dp)),
-                                        contentScale = ContentScale.Crop,
+                            DocumentImageField(
+                                imageUri = uiState.imageUri,
+                                onPickImage = {
+                                    pickImageLauncher.launch(
+                                        PickVisualMediaRequest(
+                                            mediaType = ActivityResultContracts.PickVisualMedia.ImageOnly,
+                                        ),
                                     )
-                                } else {
-                                    Text(
-                                        text = stringResource(id = R.string.document_add_no_image),
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
+                                },
+                                onRemoveImage = { onImagePicked(null) },
+                            )
                         }
                     }
                 }
@@ -361,81 +230,14 @@ fun EditDocumentScreen(
 }
 
 @Composable
-private fun HeroCard(
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                modifier = Modifier.size(42.dp),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-            ) {
-                Icon(
-                    modifier = Modifier.padding(10.dp),
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(
-                    text = stringResource(id = R.string.document_edit_title),
-                    style = MaterialTheme.typography.titleLarge,
-                )
-                Text(
-                    text = stringResource(id = R.string.document_edit_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategorySelector(
-    selected: DocumentCategory,
-    onCategoryChange: (DocumentCategory) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        DocumentCategory.entries.forEach { category ->
-            FilterChip(
-                selected = selected == category,
-                onClick = { onCategoryChange(category) },
-                label = { Text(text = category.displayName) },
-            )
-        }
-    }
-}
-
-@Composable
 private fun EditNotFoundCard(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    OutlinedCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
+        colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
@@ -454,67 +256,14 @@ private fun EditNotFoundCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedButton(onClick = onBackClick) {
-                Text(text = stringResource(id = R.string.document_detail_back))
+                Text(text = stringResource(id = R.string.action_back))
             }
         }
     }
 }
 
 @Composable
-private fun rememberExpirationLabel(
-    expirationTimestampMillis: Long?,
-): String {
-    val noneLabel = stringResource(id = R.string.document_add_expiration_none)
-    return remember(expirationTimestampMillis, noneLabel) {
-        if (expirationTimestampMillis == null) {
-            noneLabel
-        } else {
-            val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
-            formatter.format(Date(expirationTimestampMillis))
-        }
-    }
-}
-
-private fun showNativeDatePicker(
-    context: Context,
-    initialDateMillis: Long,
-    onDateSelected: (Long) -> Unit,
-) {
-    val activity = context.findActivity() ?: return
-    val calendar = Calendar.getInstance().apply {
-        timeInMillis = initialDateMillis
-    }
-
-    DatePickerDialog(
-        activity,
-        { _, year, month, dayOfMonth ->
-            val selected = Calendar.getInstance().apply {
-                set(Calendar.YEAR, year)
-                set(Calendar.MONTH, month)
-                set(Calendar.DAY_OF_MONTH, dayOfMonth)
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            onDateSelected(selected.timeInMillis)
-        },
-        calendar.get(Calendar.YEAR),
-        calendar.get(Calendar.MONTH),
-        calendar.get(Calendar.DAY_OF_MONTH),
-    ).show()
-}
-
-private fun Context.findActivity(): Activity? {
-    return when (this) {
-        is Activity -> this
-        is ContextWrapper -> baseContext.findActivity()
-        else -> null
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 private fun EditDocumentPreview() {
     SafeVaultTheme {
         EditDocumentScreen(
@@ -527,7 +276,6 @@ private fun EditDocumentPreview() {
             onSaveClick = {},
             onTitleChange = {},
             onCategoryChange = {},
-            onExpirationDateChange = {},
             onNoteChange = {},
             onImagePicked = {},
         )

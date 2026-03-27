@@ -9,7 +9,6 @@ data class DocumentEntity(
     val id: Long = 0L,
     val title: String,
     val category: String,
-    val expirationTimestampMillis: Long?,
     val note: String,
     val imageUri: String?,
     val createdAtMillis: Long,

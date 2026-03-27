@@ -12,11 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavType
 import androidx.navigation.NavHostController
-import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.example.safevault.R
 import com.example.safevault.di.AppContainer
 import com.example.safevault.feature.documents.add.AddDocumentRoute
@@ -51,24 +50,22 @@ fun SafeVaultNavHost(
     ) {
         NavHost(
             navController = navController,
-            startDestination = SafeVaultDestination.DOCUMENTS_LIST_ROUTE,
+            startDestination = Route.DocumentsList,
             modifier = Modifier.fillMaxSize(),
         ) {
-            composable(route = SafeVaultDestination.DOCUMENTS_LIST_ROUTE) {
+            composable<Route.DocumentsList> {
                 DocumentsListRoute(
                     documentsRepository = appContainer.documentsRepository,
                     onAddDocumentClick = {
-                        navController.navigate(SafeVaultDestination.ADD_DOCUMENT_ROUTE)
+                        navController.navigate(Route.AddDocument)
                     },
                     onDocumentClick = { documentId ->
-                        navController.navigate(
-                            SafeVaultDestination.detailRoute(documentId = documentId),
-                        )
+                        navController.navigate(Route.DocumentDetail(documentId))
                     },
                 )
             }
 
-            composable(route = SafeVaultDestination.ADD_DOCUMENT_ROUTE) {
+            composable<Route.AddDocument> {
                 AddDocumentRoute(
                     documentsRepository = appContainer.documentsRepository,
                     onBackClick = { navController.popBackStack() },
@@ -80,15 +77,10 @@ fun SafeVaultNavHost(
                 )
             }
 
-            composable(
-                route = SafeVaultDestination.DOCUMENT_DETAIL_ROUTE,
-                arguments = listOf(
-                    navArgument("documentId") { type = NavType.LongType },
-                ),
-            ) { backStackEntry ->
-                val documentId = backStackEntry.arguments?.getLong("documentId") ?: 0L
+            composable<Route.DocumentDetail> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.DocumentDetail>()
                 DocumentDetailRoute(
-                    documentId = documentId,
+                    documentId = route.documentId,
                     documentsRepository = appContainer.documentsRepository,
                     onBackClick = { navController.popBackStack() },
                     onDocumentDeleted = {
@@ -97,20 +89,15 @@ fun SafeVaultNavHost(
                     },
                     onDeleteFailed = { showMessage(messageDeleteFailed) },
                     onEditClick = {
-                        navController.navigate(SafeVaultDestination.editRoute(documentId = documentId))
+                        navController.navigate(Route.EditDocument(route.documentId))
                     },
                 )
             }
 
-            composable(
-                route = SafeVaultDestination.EDIT_DOCUMENT_ROUTE,
-                arguments = listOf(
-                    navArgument("documentId") { type = NavType.LongType },
-                ),
-            ) { backStackEntry ->
-                val documentId = backStackEntry.arguments?.getLong("documentId") ?: 0L
+            composable<Route.EditDocument> { backStackEntry ->
+                val route = backStackEntry.toRoute<Route.EditDocument>()
                 EditDocumentRoute(
-                    documentId = documentId,
+                    documentId = route.documentId,
                     documentsRepository = appContainer.documentsRepository,
                     onBackClick = { navController.popBackStack() },
                     onDocumentUpdated = {

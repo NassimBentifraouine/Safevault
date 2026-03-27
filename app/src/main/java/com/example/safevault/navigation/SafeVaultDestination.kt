@@ -1,16 +1,17 @@
 package com.example.safevault.navigation
 
-object SafeVaultDestination {
-    const val DOCUMENTS_LIST_ROUTE = "documents_list"
-    const val ADD_DOCUMENT_ROUTE = "add_document"
-    const val DOCUMENT_DETAIL_ROUTE = "document_detail/{documentId}"
-    const val EDIT_DOCUMENT_ROUTE = "edit_document/{documentId}"
+import kotlinx.serialization.Serializable
 
-    fun detailRoute(documentId: Long): String {
-        return "document_detail/$documentId"
-    }
+sealed interface Route {
+    @Serializable
+    data object DocumentsList : Route
 
-    fun editRoute(documentId: Long): String {
-        return "edit_document/$documentId"
-    }
+    @Serializable
+    data object AddDocument : Route
+
+    @Serializable
+    data class DocumentDetail(val documentId: Long) : Route
+
+    @Serializable
+    data class EditDocument(val documentId: Long) : Route
 }

@@ -4,8 +4,6 @@ import android.content.Context
 import androidx.room.Room
 import com.example.safevault.data.local.SafeVaultDatabase
 import com.example.safevault.data.repository.DocumentsRepository
-import com.example.safevault.data.repository.InMemoryDocumentsRepository
-import com.example.safevault.data.repository.ResilientDocumentsRepository
 import com.example.safevault.data.repository.RoomDocumentsRepository
 
 interface AppContainer {
@@ -20,23 +18,17 @@ class DefaultAppContainer(
             context = context,
             klass = SafeVaultDatabase::class.java,
             name = SafeVaultDatabase.DATABASE_NAME,
-        ).build()
-    }
-
-    private val fallbackRepository: DocumentsRepository by lazy {
-        InMemoryDocumentsRepository()
-    }
-
-    private val roomRepository: DocumentsRepository by lazy {
-        RoomDocumentsRepository(
-            documentsDao = database.documentsDao(),
+        ).addMigrations(
+            SafeVaultDatabase.MIGRATION_1_2,
+            SafeVaultDatabase.MIGRATION_2_4,
+            SafeVaultDatabase.MIGRATION_3_4,
         )
+            .build()
     }
 
     override val documentsRepository: DocumentsRepository by lazy {
-        ResilientDocumentsRepository(
-            primary = roomRepository,
-            fallback = fallbackRepository,
+        RoomDocumentsRepository(
+            documentsDao = database.documentsDao(),
         )
     }
 }

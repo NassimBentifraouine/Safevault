@@ -1,5 +1,6 @@
 package com.example.safevault.feature.documents.detail
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,11 +26,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,21 +41,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.safevault.R
 import com.example.safevault.domain.model.DocumentCategory
 import com.example.safevault.domain.model.VaultDocument
 import com.example.safevault.ui.theme.SafeVaultTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,27 +92,18 @@ fun DocumentDetailScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                    ),
-                ),
-            ),
+            .background(MaterialTheme.colorScheme.background),
     ) {
         Scaffold(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = {
-                        Text(text = stringResource(id = R.string.document_detail_title))
-                    },
+                    title = { Text(text = stringResource(id = R.string.document_detail_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.action_back),
                             )
                         }
                     },
@@ -130,6 +118,9 @@ fun DocumentDetailScreen(
                             )
                         }
                     },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
                 )
             },
         ) { innerPadding ->
@@ -175,10 +166,10 @@ private fun NotFoundCard(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    OutlinedCard(
         modifier = modifier,
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
+        colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
@@ -197,7 +188,7 @@ private fun NotFoundCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedButton(onClick = onBackClick) {
-                Text(text = stringResource(id = R.string.document_detail_back))
+                Text(text = stringResource(id = R.string.action_back))
             }
         }
     }
@@ -212,20 +203,16 @@ private fun DocumentContent(
 ) {
     Column(
         modifier = modifier
+            .animateContentSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        HeroDocumentCard(document = document)
+        HeaderCard(document = document)
 
         InfoCard(
             label = stringResource(id = R.string.document_detail_category_label),
-            value = document.category.displayName,
-        )
-
-        InfoCard(
-            label = stringResource(id = R.string.document_detail_expiration_label),
-            value = formatExpiration(document.expirationTimestampMillis),
+            value = stringResource(id = document.category.labelRes),
         )
 
         InfoCard(
@@ -240,46 +227,47 @@ private fun DocumentContent(
             imageUri = document.imageUri,
         )
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.extraLarge,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
-            ),
+        DangerZoneCard(
+            isDeleting = isDeleting,
+            onDeleteClick = onDeleteClick,
+        )
+    }
+}
+
+@Composable
+private fun HeaderCard(
+    document: VaultDocument,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .animateContentSize(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+            Text(
+                text = document.title,
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Surface(
+                shape = MaterialTheme.shapes.large,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f),
             ) {
                 Text(
-                    text = stringResource(id = R.string.document_detail_delete),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    text = stringResource(id = document.category.labelRes),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                 )
-                Button(
-                    onClick = onDeleteClick,
-                    enabled = !isDeleting,
-                ) {
-                    if (isDeleting) {
-                        CircularProgressIndicator(
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.padding(vertical = 2.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = null,
-                        )
-                        Text(
-                            modifier = Modifier.padding(start = 8.dp),
-                            text = stringResource(id = R.string.document_detail_delete_confirm_action),
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
-                }
             }
         }
     }
@@ -291,17 +279,17 @@ private fun ImageInfoCard(
     imageUri: String?,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    OutlinedCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
+        colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Text(
@@ -310,10 +298,21 @@ private fun ImageInfoCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (imageUri == null) {
-                Text(
-                    text = stringResource(id = R.string.document_detail_image_none),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(112.dp),
+                    shape = MaterialTheme.shapes.large,
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = stringResource(id = R.string.document_detail_image_none),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
             } else {
                 AsyncImage(
                     model = imageUri,
@@ -330,53 +329,22 @@ private fun ImageInfoCard(
 }
 
 @Composable
-private fun HeroDocumentCard(
-    document: VaultDocument,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = document.title,
-                style = MaterialTheme.typography.headlineSmall,
-            )
-            Text(
-                text = document.category.displayName,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-    }
-}
-
-@Composable
 private fun InfoCard(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    OutlinedCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
+        colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
@@ -393,16 +361,60 @@ private fun InfoCard(
 }
 
 @Composable
-private fun formatExpiration(expirationTimestampMillis: Long?): String {
-    if (expirationTimestampMillis == null) {
-        return stringResource(id = R.string.document_detail_expiration_none)
+private fun DangerZoneCard(
+    isDeleting: Boolean,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.24f),
+        ),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                text = stringResource(id = R.string.document_detail_delete),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Button(
+                onClick = onDeleteClick,
+                enabled = !isDeleting,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                ),
+            ) {
+                if (isDeleting) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.padding(vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.onError,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = null,
+                    )
+                    Text(
+                        modifier = Modifier.padding(start = 8.dp),
+                        text = stringResource(id = R.string.document_detail_delete_confirm_action),
+                    )
+                }
+            }
+        }
     }
-    val formatter = SimpleDateFormat("dd MMM yyyy", Locale.FRANCE)
-    return formatter.format(Date(expirationTimestampMillis))
 }
 
-@Preview(showBackground = true)
 @Composable
+@androidx.compose.ui.tooling.preview.Preview(showBackground = true)
 private fun DocumentDetailPreview() {
     SafeVaultTheme {
         DocumentDetailScreen(
@@ -412,7 +424,6 @@ private fun DocumentDetailPreview() {
                     id = 3L,
                     title = "Passeport",
                     category = DocumentCategory.IDENTITY,
-                    expirationTimestampMillis = System.currentTimeMillis() + 86_400_000L * 180L,
                     note = "A renouveler avant l'ete prochain.",
                     imageUri = "content://safevault/passeport.jpg",
                 ),

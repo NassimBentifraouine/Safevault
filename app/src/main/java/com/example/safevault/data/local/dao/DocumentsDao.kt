@@ -13,6 +13,9 @@ interface DocumentsDao {
     fun observeAll(): Flow<List<DocumentEntity>>
 
     @Query("SELECT * FROM documents WHERE id = :id LIMIT 1")
+    fun observeById(id: Long): Flow<DocumentEntity?>
+
+    @Query("SELECT * FROM documents WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): DocumentEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
